@@ -484,6 +484,149 @@
             font-weight: 500;
         }
 
+        .converter-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .converter-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 32px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 24px;
+        }
+
+        .converter-row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .converter-input {
+            flex: 2;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .converter-input:focus {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .converter-select {
+            flex: 1;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .converter-select:focus {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .converter-select option {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        .swap-button {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        .swap-button:hover {
+            transform: rotate(180deg) scale(1.1);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .converter-result {
+            text-align: center;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+            margin-top: 24px;
+        }
+
+        .result-amount {
+            font-size: 32px;
+            font-weight: 900;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .result-details {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        .rates-info {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 24px;
+        }
+
+        .rates-info h4 {
+            color: white;
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .rate-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .rate-item:last-child {
+            border-bottom: none;
+        }
+
+        .rate-currency {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .rate-value {
+            font-weight: 700;
+            color: white;
+        }
+
         .footer {
             text-align: center;
             padding: 60px 24px;
@@ -564,6 +707,9 @@
                 <button class="tab-btn" onclick="fetchWeeklyRates(this)">
                     📅 Еженедельные  
                 </button>
+                <button class="tab-btn" onclick="showConverter(this)">
+                    💱 Конвертер
+                </button>
                 <button class="tab-btn" onclick="fetchReferenceList(this)">
                     📋 Справочник
                 </button>
@@ -586,7 +732,7 @@
     </div>
 
     <script>
-        const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+        const CORS_PROXY = 'https://cors-proxy.vk2.kicksharing.asia/?url=';
         
         const currencyNames = {
             'USD': 'Доллар США',
@@ -603,8 +749,13 @@
             'AUD': 'Австралийский доллар',
             'SEK': 'Шведская крона',
             'NOK': 'Норвежская крона',
-            'TRY': 'Турецкая лира'
+            'TRY': 'Турецкая лира',
+            'KGS': 'Кыргызский сом'
         };
+
+        // Глобальные переменные для конвертера
+        let currentRates = {};
+        let isConverterActive = false;
 
         // Create floating particles
         function createParticles() {
@@ -690,7 +841,7 @@
                         <div class="stat-label">Средний курс</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value">🔄</div>
+                        <div class="stat-value">24/7</div>
                         <div class="stat-label">Live данные</div>
                     </div>
                 </div>
@@ -782,11 +933,15 @@
         
         async function fetchDailyRates(btn) {
             if (btn) setActiveTab(btn);
+            isConverterActive = false;
             showLoading();
             try {
                 const xmlString = await fetchData('https://nbkr.kg/XML/daily.xml');
                 const xmlDoc = parseXML(xmlString);
                 const currencies = xmlDoc.querySelectorAll('Currency');
+                
+                // Сохраняем курсы для конвертера
+                updateCurrentRates(currencies);
                 
                 const html = formatCurrencyData(currencies, 'daily', xmlDoc);
                 document.getElementById('content').innerHTML = html;
@@ -795,9 +950,154 @@
                 showError('Не удалось загрузить ежедневные курсы: ' + error.message);
             }
         }
+
+        function updateCurrentRates(currencies) {
+            currentRates = { 'KGS': { value: 1, nominal: 1 } }; // Сом как базовая валюта
+            
+            Array.from(currencies).forEach(currency => {
+                const code = currency.getAttribute('ISOCode');
+                const value = parseFloat(currency.querySelector('Value')?.textContent.replace(',', '.') || 0);
+                const nominal = parseFloat(currency.querySelector('Nominal')?.textContent || 1);
+                
+                if (code && value > 0) {
+                    currentRates[code] = { value, nominal };
+                }
+            });
+        }
+
+        function showConverter(btn) {
+            if (btn) setActiveTab(btn);
+            isConverterActive = true;
+            
+            // Если курсы не загружены, загружаем их
+            if (Object.keys(currentRates).length === 0) {
+                showLoading();
+                fetchData('https://nbkr.kg/XML/daily.xml')
+                    .then(xmlString => {
+                        const xmlDoc = parseXML(xmlString);
+                        const currencies = xmlDoc.querySelectorAll('Currency');
+                        updateCurrentRates(currencies);
+                        renderConverter();
+                    })
+                    .catch(error => {
+                        showError('Не удалось загрузить курсы для конвертера: ' + error.message);
+                    });
+            } else {
+                renderConverter();
+            }
+        }
+
+        function renderConverter() {
+            const currencyOptions = Object.keys(currentRates).map(code => 
+                `<option value="${code}">${code} - ${currencyNames[code] || code}</option>`
+            ).join('');
+
+            const html = `
+                <div class="data-header">
+                    <h2>Конвертер валют</h2>
+                    <p>Конвертация по актуальным курсам НБКР</p>
+                </div>
+                
+                <div class="converter-container">
+                    <div class="converter-card">
+                        <div class="converter-row">
+                            <input type="number" class="converter-input" id="fromAmount" placeholder="Введите сумму" value="1" oninput="convertCurrency()">
+                            <select class="converter-select" id="fromCurrency" onchange="convertCurrency()">
+                                ${currencyOptions}
+                            </select>
+                        </div>
+                        
+                        <button class="swap-button" onclick="swapCurrencies()">⇅</button>
+                        
+                        <div class="converter-row">
+                            <input type="number" class="converter-input" id="toAmount" placeholder="Результат" readonly>
+                            <select class="converter-select" id="toCurrency" onchange="convertCurrency()">
+                                ${currencyOptions}
+                            </select>
+                        </div>
+                        
+                        <div class="converter-result" id="conversionResult" style="display: none;">
+                            <div class="result-amount" id="resultAmount">0</div>
+                            <div class="result-details" id="resultDetails">Конвертация</div>
+                        </div>
+                    </div>
+                    
+                    <div class="rates-info">
+                        <h4>📊 Актуальные курсы</h4>
+                        <div id="ratesList">
+                            ${Object.entries(currentRates).filter(([code]) => code !== 'KGS').map(([code, data]) => `
+                                <div class="rate-item">
+                                    <span class="rate-currency">${code}</span>
+                                    <span class="rate-value">${(data.value / data.nominal).toFixed(4)} сом</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('content').innerHTML = html;
+            
+            // Устанавливаем USD и KGS по умолчанию
+            document.getElementById('fromCurrency').value = 'USD';
+            document.getElementById('toCurrency').value = 'KGS';
+            convertCurrency();
+        }
+
+        function convertCurrency() {
+            const fromAmount = parseFloat(document.getElementById('fromAmount').value) || 0;
+            const fromCurrency = document.getElementById('fromCurrency').value;
+            const toCurrency = document.getElementById('toCurrency').value;
+            
+            if (!currentRates[fromCurrency] || !currentRates[toCurrency]) return;
+            
+            // Конвертация: сначала в сомы, потом в целевую валюту
+            const fromRate = currentRates[fromCurrency];
+            const toRate = currentRates[toCurrency];
+            
+            // Сумма в сомах
+            const amountInKGS = fromCurrency === 'KGS' ? 
+                fromAmount : 
+                (fromAmount / fromRate.nominal) * fromRate.value;
+            
+            // Итоговая сумма
+            const result = toCurrency === 'KGS' ? 
+                amountInKGS : 
+                (amountInKGS / toRate.value) * toRate.nominal;
+            
+            document.getElementById('toAmount').value = result.toFixed(4);
+            
+            // Показываем детали конвертации
+            const resultDiv = document.getElementById('conversionResult');
+            const resultAmount = document.getElementById('resultAmount');
+            const resultDetails = document.getElementById('resultDetails');
+            
+            resultAmount.textContent = `${result.toFixed(2)} ${toCurrency}`;
+            resultDetails.textContent = `${fromAmount} ${fromCurrency} = ${result.toFixed(4)} ${toCurrency}`;
+            resultDiv.style.display = 'block';
+        }
+
+        function swapCurrencies() {
+            const fromCurrency = document.getElementById('fromCurrency');
+            const toCurrency = document.getElementById('toCurrency');
+            const fromAmount = document.getElementById('fromAmount');
+            const toAmount = document.getElementById('toAmount');
+            
+            // Меняем валюты местами
+            const tempCurrency = fromCurrency.value;
+            fromCurrency.value = toCurrency.value;
+            toCurrency.value = tempCurrency;
+            
+            // Меняем суммы местами
+            const tempAmount = fromAmount.value;
+            fromAmount.value = toAmount.value;
+            
+            convertCurrency();
+        }
         
         async function fetchWeeklyRates(btn) {
             if (btn) setActiveTab(btn);
+            isConverterActive = false;
             showLoading();
             try {
                 const xmlString = await fetchData('https://nbkr.kg/XML/weekly.xml');
@@ -814,6 +1114,7 @@
         
         async function fetchReferenceList(btn) {
             if (btn) setActiveTab(btn);
+            isConverterActive = false;
             showLoading();
             try {
                 const xmlString = await fetchData('https://nbkr.kg/XML/CurrenciesReferenceList.xml');
