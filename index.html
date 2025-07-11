@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Курсы валют НБКР</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇰🇬</text></svg>">
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
@@ -108,15 +110,6 @@
             display: flex;
             align-items: center;
             gap: 12px;
-        }
-
-        .logo::before {
-            content: '₽';
-            font-size: 28px;
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
         .status-indicator {
@@ -589,6 +582,7 @@
 
     <div class="footer">
         <p>Данные предоставлены <a href="https://nbkr.kg" target="_blank">Национальным банком КР</a> • Обновляется каждый день</p>
+        <p style="margin-top: 16px; font-size: 14px;">Разработчик: <a href="https://sabyrov.dev" target="_blank">Сабыров Тимур</a></p>
     </div>
 
     <script>
@@ -676,16 +670,19 @@
         }
 
         function generateStats(currencies) {
-            const avgRate = currencies.length > 0 ? 
-                (currencies.reduce((sum, curr) => {
+            // Преобразуем NodeList в массив для совместимости со старыми браузерами
+            const currencyArray = Array.from(currencies);
+            
+            const avgRate = currencyArray.length > 0 ? 
+                (currencyArray.reduce((sum, curr) => {
                     const value = parseFloat(curr.querySelector('Value')?.textContent.replace(',', '.') || 0);
                     return sum + value;
-                }, 0) / currencies.length).toFixed(2) : 0;
+                }, 0) / currencyArray.length).toFixed(2) : 0;
 
             return `
                 <div class="stats-bar">
                     <div class="stat-item">
-                        <div class="stat-value">${currencies.length}</div>
+                        <div class="stat-value">${currencyArray.length}</div>
                         <div class="stat-label">Валют</div>
                     </div>
                     <div class="stat-item">
@@ -720,7 +717,8 @@
             html += generateStats(currencies);
             html += '<div class="currency-grid">';
             
-            currencies.forEach((currency, index) => {
+            // Также преобразуем NodeList в массив для forEach
+            Array.from(currencies).forEach((currency, index) => {
                 const code = currency.getAttribute('ISOCode') || 'N/A';
                 const nominal = currency.querySelector('Nominal')?.textContent || '1';
                 const value = currency.querySelector('Value')?.textContent || 'N/A';
@@ -760,7 +758,8 @@
                 <div class="reference-grid">
             `;
             
-            currencies.forEach((currency, index) => {
+            // Преобразуем NodeList в массив для forEach
+            Array.from(currencies).forEach((currency, index) => {
                 const code = currency.getAttribute('ISOCode') || 'N/A';
                 const nominal = currency.querySelector('Nominal')?.textContent || '1';
                 const currencyName = currencyNames[code] || 'Неизвестная валюта';
