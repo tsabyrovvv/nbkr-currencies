@@ -29,7 +29,7 @@
 
 ### Клонирование репозитория
 ```bash
-git clone https://github.com/tsabyrovvv/currencies.git
+git clone https://github.com/tsabyrovvv/nbkr-currencies.git
 cd nbkr-exchange
 ```
 
@@ -127,10 +127,10 @@ SEK, NOK, DKK, INR, TRY и другие официальные валюты НБ
 
 ## 📊 Статистика проекта
 
-![GitHub stars](https://img.shields.io/github/stars/tsabyrovvv/currencies?style=social)
-![GitHub forks](https://img.shields.io/github/forks/tsabyrovvv/currencies?style=social)
-![GitHub issues](https://img.shields.io/github/issues/tsabyrovvv/currencies)
-![GitHub last commit](https://img.shields.io/github/last-commit/tsabyrovvv/currencies)
+![GitHub stars](https://img.shields.io/github/stars/tsabyrovvv/nbkr-currencies?style=social)
+![GitHub forks](https://img.shields.io/github/forks/tsabyrovvv/nbkr-currencies?style=social)
+![GitHub issues](https://img.shields.io/github/issues/tsabyrovvv/nbkr-currencies)
+![GitHub last commit](https://img.shields.io/github/last-commit/tsabyrovvv/nbkr-currencies)
 
 ---
 
